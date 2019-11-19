@@ -1,0 +1,39 @@
+<PAMDataset>
+  <PAMRasterBand band="1">
+    <CategoryNames>
+      <Category></Category>
+      <Category>El Bourollus</Category>
+      <Category>Ashtum El Gamel</Category>
+      <Category>El Ahrash</Category>
+      <Category>Qarun</Category>
+      <Category>Wadi El Rayan</Category>
+      <Category>Wadi  Sannur Cave</Category>
+      <Category>Wadi El Assuti</Category>
+      <Category>Wadi Al Alaqi</Category>
+      <Category>St. Catherine</Category>
+      <Category>Wadi Degla</Category>
+      <Category>El Omayed</Category>
+      <Category>Hasana  Dome</Category>
+      <Category>Gebel Elba</Category>
+      <Category>Nabq</Category>
+      <Category>Salouga and Ghazal</Category>
+      <Category>Petrified Forest</Category>
+      <Category>Siwa East</Category>
+      <Category>Siwa Middle</Category>
+      <Category>Siwa West</Category>
+      <Category>White Desert</Category>
+      <Category>Wadi El-Gemal - Hamata</Category>
+      <Category>Ras Mohammed</Category>
+      <Category>Zaranik</Category>
+      <Category>Abu Gallum</Category>
+      <Category>Taba</Category>
+      <Category>El-Gelf El-Kabeer</Category>
+      <Category>El-Debabeya</Category>
+      <Category>AlSahara Elsodaa</Category>
+      <Category>Dest &amp; Maghrafa</Category>
+      <Category>Gebel ElEnglaiz</Category>
+      <Category>Sallum</Category>
+      <Category>Mount Kamel Meteor</Category>
+    </CategoryNames>
+  </PAMRasterBand>
+</PAMDataset>
