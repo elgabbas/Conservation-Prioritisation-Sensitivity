@@ -2,3 +2,13 @@
 .Rhistory
 .RData
 .Ruserdata
+<<<<<<< HEAD
+=======
+output_sh/*.sh
+output_bat/*.bat
+output_moab/*.moab
+output_spp/*.spp
+output_tasks/*
+Zonation_Input_files_preparation_cache/*
+Zonation_Input_files_preparation_files/*
+>>>>>>> Initial commit

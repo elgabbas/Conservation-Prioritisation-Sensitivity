@@ -1,0 +1,1197 @@
+---
+title: '**Spatial conservation prioritisation in data-poor countries: a quantitative sensitivity analysis**<h4 style="font-size:100%; font-color:red; font-family: Helvetica">Appendix 2</h4><br>'
+pagetitle: "Spatial conservation prioritisation in data-poor countries: a quantitative sensitivity analysis"
+author:
+  - name: <h5 class="author" style="color:black; font-family:sans-serif">Ahmed El-Gabbas<br></h5>
+    affiliation: The University of Freiburg, Germany<br><a href="https://elgabbas.github.io" target="_blank">https://elgabbas.github.io</a>
+date: '<br>`r format(Sys.time(), "%d %B %y")`<br>'
+bibliography: "Others/bibliography.bib"
+link-citations: yes
+
+
+output:
+  rmdformats::html_clean:
+    lightbox: true
+    thumbnails: true
+    gallery: true
+    highlight: kate
+    css: "Others/style.css"
+    toc: true
+    toc_depth: 3
+    number_sections: false
+    collapsed: true
+    smooth_scroll: true
+  editor_options:
+    chunk_output_type: console
+---
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+require(knitr)
+require(rmdformats)
+require(tidyverse)
+require(DT)
+require(gtools)
+require(jpeg)
+require(grid)
+
+## Global options
+options(max.print = "75")
+knitr::opts_chunk$set(
+	echo = TRUE, message = FALSE,
+	warning = FALSE, cache = TRUE,
+	comment = NA, prompt = FALSE,
+	tidy.opts = list(width.cutoff = 75),
+	tidy = FALSE
+)
+opts_knit$set(width = 75)
+
+invisible(
+  lapply(X = c("output_sh", "output_bat", "output_moab",
+               "output_spp", "output_tasks", "output"),
+         FUN = function(x){
+           if(dir.exists(x) == FALSE){
+             dir.create(x)
+           }
+         }))
+options(stringsAsFactors = FALSE)
+
+```
+
+***
+
+## 1. Introduction
+
+This code aimed at automatizing the creation of input files to run the sensitivity analyses of <a href="https://www.helsinki.fi/en/researchgroups/digital-geography-lab/software-developed-in-cbig" target="_blank">`Zonation`</a>, similar to those used in El-Gabbas *et al.* paper:
+
+> El-Gabbas, Ahmed; Gilbert, Francis; and Dormann, Carsten F. **Spatial conservation prioritisation in data-poor countries: a quantitative sensitivity analysis**. BMC Ecology
+
+In this reproducible code, I will use 5 species for each surrogate group (butterflies, mammals, reptiles).
+
+<br>
+***It is important to note that this appendix does not give an introduction to `Zonation` software. An introduction to the `Zonation` software can be found in [@di2014quick]. I expect the reader to be familiar with Zonation and have read the paper in advance.***
+
+<br>
+
+### 1.1. Abbreviations used
+
+<br>
+***Species weights***
+
+  * ``WTWO``: without weights
+  * ``WTLoc``: with national red-list status weighting
+  * ``NoUncert``: without predictive uncertainty
+  * ``Uncert``: with predictive uncertainty
+
+<br>
+***Connectivity***
+
+  * ``BQP``: Boundary Quality Penalty
+  * ``BQP-WO``: No connectivity analyses
+  * ``BQP-Low`` /`` BQP-Med`` /`` BQP-Strng``: low/medium/strong BQP curves
+
+<br>
+***Modelling algorithms***
+
+  * ``Mxnt``: Maxent
+  * ``EN``: elastic net
+
+<br>
+***Sampling bias***
+
+  * ``BiasWO``: Environment-only models (no bias correction)
+  * `Bias0`: Bias-free predictions
+
+<br>
+***Surrogate groups***
+
+  * ``MMls``: Mammals
+  * ``Rep``:  Reptiles
+  * ``Butr``: Butterflies
+  * ``AllSP``:  All three groups together
+
+<br>
+
+
+
+### 1.2. Input files
+
+<br>
+**Species weights**
+
+Four files for different weighting options `*.csv` are available in the folder `ZigInputFiles\Data\`. Here is an example on one of these files: `WeightsData_EN_Bias0.csv`:
+
+```{r echo = FALSE}
+DT::datatable(
+  readr::read_csv("ZigInputFiles/Data/WeightsData_EN_Bias0.csv")[,-1],
+  options = list(dom = "t",
+                 autoWidth = FALSE,
+                 filter = "none",
+                 ordering = FALSE,
+                 columnDefs = list(
+                   list(width = '35px',
+                        targets = "_all")),
+                 initComplete = htmlwidgets::JS(
+                   "function(settings, json) {",
+                   paste0("$(this.api().table().container()).css({'font-size': '", "10pt", "'});"),
+                   "}")),
+  rownames = FALSE)
+```
+
+**Setting files**
+
+Four Setting files are available in this folder: `ZigInputFiles\Dat\*.dat`. Here is an example on one of these files (`ABF_Mask.dat`):
+```{r echo = FALSE}
+D3 <- read.delim("ZigInputFiles/Dat/ABF_Mask.dat", header = F)
+
+for (i in 1:nrow(D3)){
+  cat(as.character(D3[i,]), sep = "\t")
+  cat("\n")
+}
+```
+
+<br>
+
+**Predicted distribution maps**
+
+The folder `ZigInputFiles\Maps` contains example predicted distribution maps for each combination of species distribution models and sampling bias correction.
+
+```{r echo=FALSE, fig.align="center", fig.height=15, fig.width=20}
+Files <- cbind.data.frame(
+  En_Bias0 = list.files(
+    "ZigInputFiles/Maps/En_Bias0/", full.names = T),
+  En_NoBias = list.files(
+    "ZigInputFiles/Maps/En_NoBias/", full.names = T),
+  Mxnt_Bias0 = list.files(
+    "ZigInputFiles/Maps/Mxnt_Bias0/", full.names = T),
+  Mxnt_NoBias = list.files(
+    "ZigInputFiles/Maps/Mxnt_NoBias/", full.names = T))
+
+Files <- apply(Files, 2, function(x){
+  AA <- gsub(pattern = "ZigInputFiles/Maps/",
+             replacement = "", x = x)
+  gtools::mixedsort(AA)
+})
+
+DT::datatable(
+  Files,
+  options = list(dom = "t",
+                 autoWidth = FALSE,
+                 filter = "none",
+                 ordering = FALSE,
+                 columnDefs = list(
+                   list(width = '35px',
+                        targets = "_all")),
+                 initComplete = htmlwidgets::JS(
+                   "function(settings, json) {",
+                   paste0("$(this.api().table().container()).css({'font-size': '", "9pt", "'});"),
+                   "}"),
+                 lengthMenu = 15, pageLength = 15),
+  rownames = FALSE)
+```
+
+Example map:
+
+```{r echo=FALSE, fig.align="center", fig.height=15, fig.width=20}
+par(oma = c(0.125, 0.125, 0.125, 0.125),
+    mar = c(0.125, 0.125, 0.125, 0.125))
+plot(raster("ZigInputFiles/Maps/En_Bias0/En_Bias0_Sp5.tif"),
+     main = "", legend.width = 4,
+     cex.main = 1, axes = F, box = F,
+     col = rev(gray(seq(0, 1, 0.001))))
+```
+
+**Cost layer**
+
+The file `ZigInputFiles\Maps\CostLayer.tif` identifieS urban areas to be given low priority.
+
+```{r echo=FALSE, fig.align="center", fig.height=15, fig.width=20}
+par(oma = c(0.125, 0.125, 0.125, 0.125),
+    mar = c(0.125, 0.125, 0.125, 0.125))
+plot(raster("ZigInputFiles/Maps/CostLayer.tif"),
+     col = c("lightgrey", "darkgrey"),
+     main = "", legend = F)
+```
+
+**Current Protected Areas**
+
+The file `ZigInputFiles\Maps\Mask_PAs.tif` discriminates the Egyptian Protected Areas from other areas.
+
+```{r echo=FALSE, fig.align="center", fig.height=15, fig.width=20}
+par(oma = c(0.125, 0.125, 0.125, 0.125),
+    mar = c(0.125, 0.125, 0.125, 0.125))
+plot(raster("ZigInputFiles/Maps/Mask_PAs.tif"),
+     main = "", legend = F, col = c("lightgrey", "darkgrey"),
+     axes = F, box = F)
+```
+
+**Response curve**
+
+This file `ZigInputFiles\Maps\BQPcurves.txt` contains data for different BQP curves used.
+
+
+```{r echo=FALSE, fig.align="center", fig.height=15, fig.width=20}
+img <- readJPEG("Others/BQP_Curves.jpeg")
+grid.raster(img)
+```
+
+> Response curves used in the boundary-quality penalty connectivity analyses. These curves describe a range of species sensitivity to habitat loss in neighbour cells, ranging from no response (1) to strong response (4). The x-axis shows the percentage of neighbour cells (specified by three values of radii) remaining: 100 represents no habitat loss; while 0 represents total habitat loss of all neighbour cells. The y-axis shows the percentage reduction in local cell value in response to habitat loss. 
+
+<br>
+
+## 2. Preparing feature list files `(.spp)`
+
+> The feature list file `(.spp)` includes a list of all biodiversity features (species, ecosystems, etc.) included in the analysis. This file is a text file that can be created in Notepad. [The file name
+extension .spp is not compulsory but we often use it to indicate that the file is a Zonation "species list file".] Each row in the file corresponds to a biodiversity feature. For each biodiversity feature, there are six columns of information which require values to be entered. Frequently, dummy values are used in columns that are not relevant for the particular case. [@di2014quick]
+
+An example `.spp` file is shown below. For more information, see [@di2014quick]
+
+```{r echo=FALSE}
+D2 <- read.delim("Others/SppExample.spp", header = F)
+
+for (i in 1:nrow(D2)){
+  cat(as.character(D2[i,]), sep = "\t")
+  cat("\n")
+}
+```
+
+<br>
+The following code creates 640 ``.spp`` files: 
+
+* 4 weights × 10 BQP combinations × 2 Modelling algorithms × 2 Sampling bias scenarios × 4 surrogate options
+
+<br>
+
+### 2.1. Preparing file names
+The four weighting options are:
+
+  * ``WTWO-NoUncert``: no weighting; without predictive uncertainty
+  * ``WTLoc-NoUncert``: weighting with national red-list status weighting; without predictive uncertainty
+  * ``WTWO-Uncert ``: no weighting; with predictive uncertainty
+  * ``WTLoc-Uncert`` : weighting with national red-list status weighting; with predictive uncertainty
+
+```{r}
+Weights <- c("WTWO-NoUncert", "WTLoc-NoUncert", "WTWO-Uncert", "WTLoc-Uncert")
+```
+
+Four BQP curves and 3 radii
+```{r}
+BQP_Curve <- expand.grid(c("BQP-WO", "BQP-Low", "BQP-Med", "BQP-Strng"), 1:3)
+BQP_Curve <- paste0(BQP_Curve[,1], "-", BQP_Curve[,2])
+BQP_Curve <- BQP_Curve[!BQP_Curve %in% c("BQP-WO-2", "BQP-WO-3")]
+    
+```
+
+Two Modelling algorithms × 2 Sampling bias scenarios × 4 surrogate options
+
+```{r}
+SpeciesMaps <- expand.grid(
+  c("Mxnt", "EN"),
+  c("BiasWO", "Bias0"),
+  c("MMls", "Rep", "Butr", "AllSP")) 
+
+SpeciesMaps <- paste0(
+  SpeciesMaps[,1], "-",
+  SpeciesMaps[,2], "-",
+  SpeciesMaps[,3])
+
+AllSppFiles <- expand.grid(
+  Weights = Weights,
+  BQP_Curve = BQP_Curve,
+  SpeciesMaps = SpeciesMaps)
+
+AllSppFiles <- paste0(
+  AllSppFiles[,1], "__",
+  AllSppFiles[,2], "__",
+  AllSppFiles[,3], ".spp")
+```
+The names of the 640 `spp` files: 
+
+```{R echo = F}
+DT::datatable(
+  as.data.frame(AllSppFiles),
+  options = list(autoWidth = T,
+                 filter = TRUE,
+                 ordering = TRUE,
+                 columnDefs = list(
+                   list(width = '25px',
+                        targets = "_all")),
+                 initComplete = htmlwidgets::JS(
+                   "function(settings, json) {",
+                   paste0("$(this.api().table().container()).css({'font-size': '", "11pt", "'});"),
+                   "}"), pageLength = 10),
+  rownames= FALSE
+  )
+```
+
+Each `.spp` file has different number of rows based on the number of species: 5 species for analyses of each of butterflies, reptiles, and mammals; 15 species for all species analysis.
+
+```{r}
+AllSppData <- vector(mode = "list", length = length(AllSppFiles))
+names(AllSppData) <- AllSppFiles
+
+Index_AllSP <- grep(pattern = "AllSP", x = names(AllSppData))
+Index_MMls <- grep(pattern = "MMls", x = names(AllSppData))
+Index_Rep <- grep(pattern = "Rep", x = names(AllSppData))
+Index_Butr <- grep(pattern = "Butr", x = names(AllSppData))
+
+for(i in Index_AllSP){
+  AllSppData[[i]] <- data.frame(matrix(ncol = 6, nrow = 15))
+}
+
+for(i in c(Index_MMls, Index_Rep, Index_Butr)){
+  AllSppData[[i]] <- data.frame(matrix(ncol = 6, nrow = 5))
+}
+
+# renaming columns
+AllSppData <- lapply(AllSppData, FUN = function(x){
+  names(x) <- c("Weight", "Alpha", "BQP_CurveNum",
+                "BQP_Buff", "ABF_Rate", "SpeciesMaps")
+  x$Alpha <- 1
+  x$ABF_Rate <- 1
+  x
+})
+```
+
+<br>
+Next, we change the options within each of the 640 `.spp` files
+
+* BQP radius
+* BQP response curves
+* Species
+* Weights
+
+<br>
+
+### 2.2. BQP radius options
+```{r}
+Index_BQP_Buff1 <- grep(
+  pattern = "__BQP-.*-1__", x = names(AllSppData))
+for(i in Index_BQP_Buff1){
+  AllSppData[[i]]$BQP_Buff <- 1
+}
+
+Index_BQP_Buff2 <- grep(
+  pattern = "__BQP-.*-2__", x = names(AllSppData))
+for(i in Index_BQP_Buff2){
+  AllSppData[[i]]$BQP_Buff <- 2
+}
+
+Index_BQP_Buff3 <- grep(
+  pattern = "__BQP-.*-3__", x = names(AllSppData))
+for(i in Index_BQP_Buff3){
+  AllSppData[[i]]$BQP_Buff <- 3
+}
+```
+<br>
+
+### 2.3. BQP response curves options
+```{r}
+BQP_CurveNum1 <- grep(
+  pattern = "BQP-WO", x = names(AllSppData))
+for(i in BQP_CurveNum1){
+  AllSppData[[i]]$BQP_CurveNum <- 1
+}
+
+BQP_CurveNum2 <- grep(
+  pattern = "BQP-Low", x = names(AllSppData))
+for(i in BQP_CurveNum2){
+  AllSppData[[i]]$BQP_CurveNum <- 2
+}
+
+BQP_CurveNum3 <- grep(
+  pattern = "BQP-Med", x = names(AllSppData))
+for(i in BQP_CurveNum3){
+  AllSppData[[i]]$BQP_CurveNum <- 3
+}
+
+BQP_CurveNum4 <- grep(
+  pattern = "BQP-Strng", x = names(AllSppData))
+for(i in BQP_CurveNum4){
+  AllSppData[[i]]$BQP_CurveNum <- 4
+}
+```
+<br>
+
+### 2.4. Species options
+
+In this example, there are 5 species for each group. Species 1:5 for reptiles; Species 6:10 for butterflies; 11:15 for mammals
+
+<br>
+***`r kableExtra::text_spec("2.4.1. All species", color = "darkgreen")`***
+
+```{r}
+SpNums <- 1:15
+
+#-------------------------
+
+FileNames_AllSp_Mxnt_NoBias <- paste0(
+  "ZigInputFiles/Maps/Mxnt_NoBias/Mxnt_NoBias_Sp",
+  SpNums, ".tif")
+Index_AllSP_Mxnt_NoBias <- grep(
+  pattern = "Mxnt-BiasWO-AllSP",
+  x = names(AllSppData))
+for (i in Index_AllSP_Mxnt_NoBias){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_AllSp_Mxnt_NoBias
+}
+
+#-------------------------
+
+FileNames_AllSp_Mxnt_Bias0 <- paste0(
+  "ZigInputFiles/Maps/Mxnt_Bias0/Mxnt_Bias0_Sp",
+  SpNums, ".tif")
+Index_AllSP_Mxnt_Bias0 <- grep(
+  pattern = "Mxnt-Bias0-AllSP",
+  x = names(AllSppData))
+for (i in Index_AllSP_Mxnt_Bias0){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_AllSp_Mxnt_Bias0
+}
+
+#-------------------------
+
+FileNames_AllSp_En_NoBias <- paste0(
+  "ZigInputFiles/Maps/En_NoBias/En_NoBias_Sp",
+  SpNums, ".tif")
+Index_AllSP_En_NoBias <- grep(
+  pattern = "EN-BiasWO-AllSP",
+  x = names(AllSppData))
+for (i in Index_AllSP_En_NoBias){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_AllSp_En_NoBias
+}
+
+#-------------------------
+
+FileNames_AllSp_En_Bias0 <- paste0(
+  "ZigInputFiles/Maps/En_Bias0/En_Bias0_Sp",
+  SpNums, ".tif")
+Index_AllSP_En_Bias0 <- grep(
+  pattern = "EN-Bias0-AllSP",
+  x = names(AllSppData))
+for (i in Index_AllSP_En_Bias0){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_AllSp_En_Bias0
+}
+```
+
+<br>
+***`r kableExtra::text_spec("2.4.2. Reptiles", color = "darkgreen")`***
+
+```{r}
+SpNums <- 1:5
+
+#-------------------------
+
+FileNames_REPT_Mxnt_NoBias <- paste0(
+  "ZigInputFiles/Maps/Mxnt_NoBias/Mxnt_NoBias_Sp",
+  SpNums, ".tif")
+Index_REPT_Mxnt_NoBias <- grep(
+  pattern = "Mxnt-BiasWO-Rep",
+  x = names(AllSppData))
+for (i in Index_REPT_Mxnt_NoBias){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_REPT_Mxnt_NoBias
+}
+
+#-------------------------
+
+FileNames_REPT_Mxnt_Bias0 <- paste0(
+  "ZigInputFiles/Maps/Mxnt_Bias0/Mxnt_Bias0_Sp",
+  SpNums, ".tif")
+Index_REPT_Mxnt_Bias0 <- grep(
+  pattern = "Mxnt-Bias0-Rep",
+  x = names(AllSppData))
+for (i in Index_REPT_Mxnt_Bias0){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_REPT_Mxnt_Bias0
+}
+
+#-------------------------
+
+FileNames_REPT_En_NoBias <- paste0(
+  "ZigInputFiles/Maps/En_NoBias/En_NoBias_Sp",
+  SpNums, ".tif")
+Index_REPT_En_NoBias <- grep(
+  pattern = "EN-BiasWO-Rep",
+  x = names(AllSppData))
+for (i in Index_REPT_En_NoBias){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_REPT_En_NoBias
+}
+
+#-------------------------
+
+FileNames_REPT_En_Bias0 <- paste0(
+  "ZigInputFiles/Maps/En_Bias0/En_Bias0_Sp",
+  SpNums, ".tif")
+Index_REPT_En_Bias0 <- grep(
+  pattern = "EN-Bias0-Rep",
+  x = names(AllSppData))
+for (i in Index_REPT_En_Bias0){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_REPT_En_Bias0
+}
+```
+
+<br>
+***`r kableExtra::text_spec("2.4.3. Butterflies", color = "darkgreen")`***
+
+```{r}
+SpNums <- 6:10
+
+#-------------------------
+
+FileNames_BTTR_Mxnt_NoBias <- paste0(
+  "ZigInputFiles/Maps/Mxnt_NoBias/Mxnt_NoBias_Sp",
+  SpNums, ".tif")
+Index_BTTR_Mxnt_NoBias <- grep(
+  pattern = "Mxnt-BiasWO-Butr",
+  x = names(AllSppData))
+for (i in Index_BTTR_Mxnt_NoBias){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_BTTR_Mxnt_NoBias
+}
+
+#-------------------------
+
+FileNames_BTTR_Mxnt_Bias0 <- paste0(
+  "ZigInputFiles/Maps/Mxnt_Bias0/Mxnt_Bias0_Sp",
+  SpNums, ".tif")
+Index_BTTR_Mxnt_Bias0 <- grep(
+  pattern = "Mxnt-Bias0-Butr",
+  x = names(AllSppData))
+for (i in Index_BTTR_Mxnt_Bias0){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_BTTR_Mxnt_Bias0
+}
+
+#-------------------------
+
+FileNames_BTTR_En_NoBias <- paste0(
+  "ZigInputFiles/Maps/En_NoBias/En_NoBias_Sp",
+  SpNums, ".tif")
+Index_BTTR_En_NoBias <- grep(
+  pattern = "EN-BiasWO-Butr",
+  x = names(AllSppData))
+for (i in Index_BTTR_En_NoBias){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_BTTR_En_NoBias
+}
+
+#-------------------------
+
+FileNames_BTTR_En_Bias0 <- paste0(
+  "ZigInputFiles/Maps/En_Bias0/En_Bias0_Sp",
+  SpNums, ".tif")
+Index_BTTR_En_Bias0 <- grep(
+  pattern = "EN-Bias0-Butr",
+  x = names(AllSppData))
+for (i in Index_BTTR_En_Bias0){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_BTTR_En_Bias0
+}
+```
+
+<br>
+***`r kableExtra::text_spec("2.4.4. Mammals", color = "darkgreen")`***
+
+```{r}
+SpNums <- 11:15
+
+#-------------------------
+
+FileNames_MMLS_Mxnt_NoBias <- paste0(
+  "ZigInputFiles/Maps/Mxnt_NoBias/Mxnt_NoBias_Sp",
+  SpNums, ".tif")
+Index_MMLS_Mxnt_NoBias <- grep(
+  pattern = "Mxnt-BiasWO-MMls",
+  x = names(AllSppData))
+for (i in Index_MMLS_Mxnt_NoBias){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_MMLS_Mxnt_NoBias
+}
+
+#-------------------------
+
+FileNames_MMLS_Mxnt_Bias0 <- paste0(
+  "ZigInputFiles/Maps/Mxnt_Bias0/Mxnt_Bias0_Sp",
+  SpNums, ".tif")
+Index_MMLS_Mxnt_Bias0 <- grep(
+  pattern = "Mxnt-Bias0-MMls",
+  x = names(AllSppData))
+for (i in Index_MMLS_Mxnt_Bias0){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_MMLS_Mxnt_Bias0
+}
+
+#-------------------------
+
+FileNames_MMLS_En_NoBias <- paste0(
+  "ZigInputFiles/Maps/En_NoBias/En_NoBias_Sp",
+  SpNums, ".tif")
+Index_MMLS_En_NoBias <- grep(
+  pattern = "EN-BiasWO-MMls",
+  x = names(AllSppData))
+for (i in Index_MMLS_En_NoBias){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_MMLS_En_NoBias
+}
+
+#-------------------------
+
+FileNames_MMLS_En_Bias0 <- paste0(
+  "ZigInputFiles/Maps/En_Bias0/En_Bias0_Sp",
+  SpNums, ".tif")
+Index_MMLS_En_Bias0 <- grep(
+  pattern = "EN-Bias0-MMls",
+  x = names(AllSppData))
+for (i in Index_MMLS_En_Bias0){
+  AllSppData[[i]]$SpeciesMaps <- FileNames_MMLS_En_Bias0
+}
+```
+
+<br>
+
+### 2.5. Weight options
+
+These files contain the different values of per-species weight
+
+```{r}
+WeightsData_EN_Bias0 <- read.csv(
+  "ZigInputFiles/Data/WeightsData_EN_Bias0.csv",
+  sep = ",", header = T)
+
+WeightsData_EN_WOBias <- read.csv(
+  "ZigInputFiles/Data/WeightsData_EN_WOBias.csv",
+  sep = ",", header = T)
+
+WeightsData_Mxnt_Bias0 <- read.csv(
+  "ZigInputFiles/Data/WeightsData_Mxnt_Bias0.csv",
+  sep = ",", header = T)
+
+WeightsData_Mxnt_WOBias <- read.csv(
+  "ZigInputFiles/Data/WeightsData_Mxnt_WOBias.csv",
+  sep = ",", header = T)
+```
+<br>
+
+***2.5.1. No predictive uncertainty & No Red-List weight***
+
+```{r}
+Index_WTWO_NoUncert <- grep(
+  pattern = "WTWO-NoUncert",
+  x = names(AllSppData))
+
+for (i in Index_WTWO_NoUncert){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <- WeightsData_Mxnt_WOBias$WT_WO,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <-
+        WeightsData_Mxnt_WOBias$WT_WO[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <-
+          WeightsData_Mxnt_WOBias$WT_WO[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <-
+            WeightsData_Mxnt_WOBias$WT_WO[11:15],
+          print("ERROR")))))
+}
+```
+<br>
+
+***2.5.2. No predictive uncertainty & with Red-List weight ***
+
+```{r}
+Index_WTLoc_NoUncert <- grep(
+  pattern = "WTLoc-NoUncert",
+  x = names(AllSppData))
+
+for (i in Index_WTLoc_NoUncert){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <-
+      WeightsData_Mxnt_WOBias$WT_Local,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <-
+        WeightsData_Mxnt_WOBias$WT_Local[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <-
+          WeightsData_Mxnt_WOBias$WT_Local[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <-
+            WeightsData_Mxnt_WOBias$WT_Local[11:15],
+          print("ERROR")))))
+}
+```
+<br>
+
+***2.5.3. With predictive uncertainty & No Red-List weight ***
+
+*2.5.3.1. With no sampling bias | Maxent*
+```{r}
+Index_WTWO_Uncert_Mxnt_BiasWO <- grep(
+  pattern = "WTWO-Uncert.*Mxnt-BiasWO",
+  x = names(AllSppData))
+
+for (i in Index_WTWO_Uncert_Mxnt_BiasWO){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <- WeightsData_Mxnt_WOBias$WT_WO_Uncert,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <- WeightsData_Mxnt_WOBias$WT_WO_Uncert[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <- WeightsData_Mxnt_WOBias$WT_WO_Uncert[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <- WeightsData_Mxnt_WOBias$WT_WO_Uncert[11:15],
+          print("ERROR")))))
+}
+```
+
+*2.5.3.2. With no sampling bias | Elastic net*
+
+```{r}
+Index_WTWO_Uncert_EN_BiasWO <- grep(
+  pattern = "WTWO-Uncert.*EN-BiasWO",
+  x = names(AllSppData))
+
+for (i in Index_WTWO_Uncert_EN_BiasWO){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <- WeightsData_EN_WOBias$WT_WO_Uncert,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <- WeightsData_EN_WOBias$WT_WO_Uncert[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <- WeightsData_EN_WOBias$WT_WO_Uncert[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <- WeightsData_EN_WOBias$WT_WO_Uncert[11:15],
+          print("ERROR")))))
+}
+```
+
+*2.5.3.3. With correction for sampling bias | Maxent*
+
+```{r}
+Index_WTWO_Uncert_Mxnt_Bias0 <- grep(
+  pattern = "WTWO-Uncert.*Mxnt-Bias0",
+  x = names(AllSppData))
+
+for (i in Index_WTWO_Uncert_Mxnt_Bias0){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <- WeightsData_Mxnt_Bias0$WT_WO_Uncert,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <- WeightsData_Mxnt_Bias0$WT_WO_Uncert[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <- WeightsData_Mxnt_Bias0$WT_WO_Uncert[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <- WeightsData_Mxnt_Bias0$WT_WO_Uncert[11:15],
+          print("ERROR")))))
+}
+```
+
+*2.5.3.4. With correction for sampling bias | Elastic net*
+
+```{r}
+Index_WTWO_Uncert_EN_Bias0 <- grep(
+  pattern = "WTWO-Uncert.*EN-Bias0",
+  x = names(AllSppData))
+
+for (i in Index_WTWO_Uncert_EN_Bias0){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <- WeightsData_EN_Bias0$WT_WO_Uncert,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <- WeightsData_EN_Bias0$WT_WO_Uncert[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <- WeightsData_EN_Bias0$WT_WO_Uncert[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <- WeightsData_EN_Bias0$WT_WO_Uncert[11:15],
+          print("ERROR")))))
+}
+```
+
+<br>
+
+***2.5.4. With predictive uncertainty & Red-List weight ***
+
+*2.5.4.1. With no sampling bias | Maxent*
+
+```{r}
+Index_WTLoc_Uncert_Mxnt_BiasWO <- grep(
+  pattern = "WTLoc-Uncert.*Mxnt-BiasWO",
+  x = names(AllSppData))
+
+for (i in Index_WTLoc_Uncert_Mxnt_BiasWO){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <- WeightsData_Mxnt_WOBias$WT_Local_Uncert,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <- WeightsData_Mxnt_WOBias$WT_Local_Uncert[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <- WeightsData_Mxnt_WOBias$WT_Local_Uncert[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <- WeightsData_Mxnt_WOBias$WT_Local_Uncert[11:15],
+          print("ERROR")))))
+}
+```
+
+*2.5.4.2. With no sampling bias | Elastic net*
+
+```{r}
+Index_WTLoc_Uncert_EN_BiasWO <- grep(
+  pattern = "WTLoc-Uncert.*EN-BiasWO",
+  x = names(AllSppData))
+
+for (i in Index_WTLoc_Uncert_EN_BiasWO){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <- WeightsData_EN_WOBias$WT_Local_Uncert,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <- WeightsData_EN_WOBias$WT_Local_Uncert[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <- WeightsData_EN_WOBias$WT_Local_Uncert[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <- WeightsData_EN_WOBias$WT_Local_Uncert[11:15],
+          print("ERROR")))))
+}
+```
+
+*2.5.4.3. With correction for sampling bias | Maxent*
+
+```{r}
+Index_WTLoc_Uncert_Mxnt_Bias0 <- grep(
+  pattern = "WTLoc-Uncert.*Mxnt-Bias0",
+  x = names(AllSppData))
+
+for (i in Index_WTLoc_Uncert_Mxnt_Bias0){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <- WeightsData_Mxnt_Bias0$WT_Local_Uncert,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <- WeightsData_Mxnt_Bias0$WT_Local_Uncert[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <- WeightsData_Mxnt_Bias0$WT_Local_Uncert[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <- WeightsData_Mxnt_Bias0$WT_Local_Uncert[11:15],
+          print("ERROR")))))
+}
+```
+
+*2.5.4.4. With correction for sampling bias | Elastic net*
+
+```{r}
+Index_WTLoc_Uncert_EN_Bias0 <- grep(
+  pattern = "WTLoc-Uncert.*EN-Bias0",
+  x = names(AllSppData))
+
+for (i in Index_WTLoc_Uncert_EN_Bias0){
+  ifelse(
+    grepl(pattern = "AllSP", x = names(AllSppData[i])),
+    AllSppData[[i]]$Weight <- WeightsData_EN_Bias0$WT_Local_Uncert,
+    
+    ifelse(
+      grepl(pattern = "Rep", x = names(AllSppData[i])),
+      AllSppData[[i]]$Weight <- WeightsData_EN_Bias0$WT_Local_Uncert[1:5],
+      
+      ifelse(
+        grepl(pattern = "Butr", x = names(AllSppData[i])),
+        AllSppData[[i]]$Weight <- WeightsData_EN_Bias0$WT_Local_Uncert[6:10],
+        
+        ifelse(
+          grepl(pattern = "MMls", x = names(AllSppData[i])),
+          AllSppData[[i]]$Weight <- WeightsData_EN_Bias0$WT_Local_Uncert[11:15],
+          print("ERROR")))))
+}
+```
+<br>
+
+### 2.6. Exporting `.spp` files
+
+```{r}
+for (i in 1:length(AllSppData)){
+  write.table(
+    x = AllSppData[[i]],
+    file = paste0("output_spp/", names(AllSppData[i])),
+    sep = "\t", row.names = FALSE, col.names = FALSE)
+}
+```
+
+<br>
+
+***
+
+## 3. The run settings file (`.dat`)
+8 files are available in 'Maps' folder (they were written outside R). An example file is shown above.
+
+<br>
+
+***
+
+## 4. Preparing project files [`.sh` or `bat` files]
+
+The project file specifies two main input files and the output files. [@di2014quick]
+
+<br>
+
+### 4.1. Centos Linux cluster
+
+Example `.sh` file:
+```{r, echo=FALSE}
+ShEx <- read_lines("Others/ShExample.sh")
+cat(ShEx, sep = "\n")
+```
+
+<br>
+
+* These `.sh` files were prepared to work in a Centos Linux cluster servers; using Slurm Workload Manager.
+* This code produce one ``.sh`` file for each combination of ``spp`` and ``dat`` file will be prepared.
+* the argument `--use-threads` in the next code chunk represents the number of parallel computaions of `Zonation`.
+
+
+```{r}
+SppFiles <- list.files(
+  path = "output_spp\\",
+  pattern = ".*.spp", full.names = FALSE)
+
+SppFilesInit <- gsub(
+  pattern = ".spp", replacement = "", x = SppFiles)
+
+datFiles <- list.files(
+  path = "ZigInputFiles\\Dat\\",
+  pattern = ".*.dat", full.names=FALSE)
+
+datFilesInit <- gsub(
+  pattern = ".dat", replacement = "", x = datFiles)
+
+AllShFiles <- expand.grid(
+  dat = datFilesInit, spp = SppFilesInit,
+  stringsAsFactors = FALSE)
+
+AllShFiles$sh <- paste0(
+  AllShFiles$dat, "__", AllShFiles$spp, ".sh")
+
+AllShFiles$OutFile <- paste0(
+  "output/", AllShFiles$dat, "__",
+  AllShFiles$spp, ".txt")
+
+AllShFiles$dat <- paste0(AllShFiles$dat, ".dat")
+AllShFiles$spp <- paste0(AllShFiles$spp, ".spp")
+
+for (i in 1:nrow(AllShFiles)){
+  Currdat <- AllShFiles[i,"dat"]
+  CurrSpp <- AllShFiles[i,"spp"]
+  CurrOutSh <- AllShFiles[i,"sh"]
+  CurrOutTxt <- AllShFiles[i,"OutFile"]
+  
+  cat(
+    paste0(
+      '#!/bin/bash\nzig4 -r "',
+      Currdat, '" "', CurrSpp, '" "',
+      CurrOutTxt, '" ', '0 1 1 1 --use-threads=16'),
+    file = paste0("output_sh\\", CurrOutSh))
+  rm(Currdat, CurrSpp, CurrOutSh, CurrOutTxt)
+}
+```
+
+Now, there should be 2,560 `.sh` files:
+
+* 4 surrogate taxa (butterflies *vs* reptiles *vs* mammals *vs* the three groups together) ×
+* 2 modelling algorithms (Maxent *vs* elastic net) ×
+* 2 biases (without *vs* with sampling-bias correction) ×
+* 2 cell-removal rules (ABF *vs* CAZ) ×
+* 4 weighting schemes (with *vs* without Red-List or predictive-uncertainty weights) ×
+* 10 connectivity options ×
+* 2 PA-integration options (without *vs* with PA masking) 
+
+<br>
+
+### 4.2. Windows PC
+
+Example `.bat` file:
+```{r, echo=FALSE}
+BatEx <- read_lines(
+  "Others/BatExample.bat")
+cat(BatEx, sep = "\n")
+```
+<br>
+
+This is a similar code to produce ``.bat`` files to work under windows environment
+
+
+```{r}
+AllShFiles$bat <- paste0(
+  gsub(pattern = ".dat", replacement = "",
+       x = AllShFiles$dat),
+  "__",
+  gsub(pattern = ".spp", replacement = "",
+       x = AllShFiles$spp),
+  ".bat")
+
+for (i in 1:nrow(AllShFiles)){
+  Currdat <- AllShFiles[i,"dat"]
+  CurrSpp <- AllShFiles[i,"spp"]
+  CurrOutBat <- AllShFiles[i,"bat"]
+  CurrOutTxt <- AllShFiles[i,"OutFile"]
+  
+  cat(
+    paste0(
+      'call zig4.exe -r "', Currdat, '" "', CurrSpp,
+      '" "', CurrOutTxt, '" ', '0 1 1 1 --use-threads=16'),
+    file = paste0("output_bat\\", CurrOutBat))
+  
+  rm(Currdat, CurrSpp, CurrOutBat, CurrOutTxt)
+}
+```
+
+<br>
+
+***
+
+## 5. Running analyses on parallel
+
+This code creates ``.moab`` files to facilitate the parallel run of 2,560 Zonation runs on a Centos Linux cluster
+<br><br>
+An example `.moab` file:
+
+```{r, echo=FALSE}
+MoabEx <- read_lines("Others/MoabExample.moab")
+cat(MoabEx, sep = "\n")
+```
+
+<br>
+
+### 5.1. Analyses without PAs masking
+
+This code split 1280 Zonation runs into 64 files, each run 20 Zonation run in parallel
+
+```{r}
+FirstRuns <- list.files(
+  path = "output_sh\\", pattern = ".*.sh"
+)
+
+FirstRuns <- FirstRuns[grep(pattern = ".*_MaskNo__",
+                            x = FirstRuns)]
+
+FirstRuns1 <- split(
+  FirstRuns, ceiling(seq_along(1:length(FirstRuns))/20))
+
+names(FirstRuns1) <- paste0("Task_", 1:64, ".moab")
+
+for (ii in 1:length(FirstRuns1)){
+  CurrFile <- paste0(
+    "output_moab\\", names(FirstRuns1)[ii])
+  
+  cat("#!/bin/sh\n", file = CurrFile, append = FALSE)
+  
+  cat(paste0(
+    "########### Begin MOAB/Slurm header ##########\n#\n# Give job a reasonable name\n#MOAB -N Task_", 0+ii),
+    file = CurrFile, append = TRUE)
+  
+  cat(paste0(
+    '\n#\n# Request number of nodes and CPU cores per node for job\n#MOAB -l nodes=1:ppn=16, pmem=48gb\n#\n# Estimated wallclock time for job\n#MOAB -l walltime=00:12:00:00\n#\n# Write standard output and errors in same file\n#MOAB -j oe\n#\n# Send mail when job begins, aborts and ends\n#MOAB -m bae\n#\n########### End MOAB header ##########\n\necho "Working Directory:                    $PWD"\necho "Running on host                       $HOSTNAME"\necho "Job id:                               $MOAB_JOBID"\necho "Job name:                             $MOAB_JOBNAME"\necho "Number of nodes allocated to job:     $MOAB_NODECOUNT"\necho "Number of cores allocated to job:     $MOAB_PROCCOUNT"\n\nmodule load geo/zonation/4.0.0\ncd ZonationEgypt/\n\n'),
+    file = CurrFile, append = TRUE)
+  
+  for(i in 1:length(FirstRuns1[[ii]])){
+    cat(paste0(
+      'bash "', FirstRuns1[[ii]][i], '" &\n'),
+      file = CurrFile, append = TRUE)
+  }
+  
+  cat(paste0('wait\necho "All are complete"'),
+      file = CurrFile, append = TRUE)
+}
+
+Tasks <- paste0("msub Task_", 1:128, ".moab")
+cat(Tasks, file = "output_tasks\\Tasks1_128.txt", sep = "\n")
+```
+<br>
+
+
+### 5.2. Analyses with PAs masking
+
+```{r}
+FirstRuns <- list.files(
+  path = "output_sh\\", pattern = ".*.sh")
+
+FirstRuns <- FirstRuns[grep(pattern = ".*_Mask__",
+                            x = FirstRuns)]
+
+FirstRuns1 <- split(
+  FirstRuns, ceiling(seq_along(1:length(FirstRuns))/20))
+
+names(FirstRuns1) <- paste0("Task_", 65:128, ".moab")
+
+for (ii in 1:length(FirstRuns1)){
+  CurrFile <- paste0(
+    "output_moab\\", names(FirstRuns1)[ii])
+  
+  cat("#!/bin/sh\n", file = CurrFile, append = FALSE)
+  
+  cat(paste0(
+    "########### Begin MOAB/Slurm header ##########\n#\n# Give job a reasonable name\n#MOAB -N Task_", 64+ii),
+    file = CurrFile, append = TRUE)
+  
+  cat(paste0(
+    '\n#\n# Request number of nodes and CPU cores per node for job\n#MOAB -l nodes=1:ppn=16, pmem=48gb\n#\n# Estimated wallclock time for job\n#MOAB -l walltime=00:12:00:00\n#\n# Write standard output and errors in same file\n#MOAB -j oe\n#\n# Send mail when job begins, aborts and ends\n#MOAB -m bae\n#\n########### End MOAB header ##########\n\necho "Working Directory:                    $PWD"\necho "Running on host                       $HOSTNAME"\necho "Job id:                               $MOAB_JOBID"\necho "Job name:                             $MOAB_JOBNAME"\necho "Number of nodes allocated to job:     $MOAB_NODECOUNT"\necho "Number of cores allocated to job:     $MOAB_PROCCOUNT"\n\nmodule load geo/zonation/4.0.0\ncd ZonationEgypt/\n\n'),
+    file = CurrFile, append = TRUE)
+  
+  for(i in 1:length(FirstRuns1[[ii]])){
+    cat(paste0(
+      'bash "', FirstRuns1[[ii]][i], '" &\n'),
+      file = CurrFile, append = TRUE)
+  }
+  
+  cat(paste0('wait\necho "All are complete"'),
+      file = CurrFile, append = TRUE)
+}
+
+Tasks <- paste0("msub Task_", 65:128, ".moab")
+cat(Tasks, file = "output_tasks\\Tasks65_128.txt", sep = "\n")
+```
+<br>
+
+
+## 6. References
+<br>
+

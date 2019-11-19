@@ -1,0 +1,52 @@
+#!/bin/sh
+########### Begin MOAB/Slurm header ##########
+#
+# Give job a reasonable name
+#MOAB -N Task_1
+#
+# Request number of nodes and CPU cores per node for job
+#MOAB -l nodes=1:ppn=16, pmem=48gb
+#
+# Estimated wallclock time for job
+#MOAB -l walltime=00:12:00:00
+#
+# Write standard output and errors in same file
+#MOAB -j oe
+#
+# Send mail when job begins, aborts and ends
+#MOAB -m bae
+#
+########### End MOAB header ##########
+
+echo "Working Directory:                    $PWD"
+echo "Running on host                       $HOSTNAME"
+echo "Job id:                               $MOAB_JOBID"
+echo "Job name:                             $MOAB_JOBNAME"
+echo "Number of nodes allocated to job:     $MOAB_NODECOUNT"
+echo "Number of cores allocated to job:     $MOAB_PROCCOUNT"
+
+module load geo/zonation/4.0.0
+cd ZonationEgypt/
+
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__EN-Bias0-AllSP.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__EN-Bias0-Butr.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__EN-Bias0-MMls.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__EN-Bias0-Rep.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__EN-BiasWO-AllSP.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__EN-BiasWO-Butr.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__EN-BiasWO-MMls.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__EN-BiasWO-Rep.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__Mxnt-Bias0-AllSP.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__Mxnt-Bias0-Butr.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__Mxnt-Bias0-MMls.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__Mxnt-Bias0-Rep.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__Mxnt-BiasWO-AllSP.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__Mxnt-BiasWO-Butr.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__Mxnt-BiasWO-MMls.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-1__Mxnt-BiasWO-Rep.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-2__EN-Bias0-AllSP.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-2__EN-Bias0-Butr.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-2__EN-Bias0-MMls.sh" &
+bash "ABF_MaskNo__WTLoc-NoUncert__BQP-Low-2__EN-Bias0-Rep.sh" &
+wait
+echo "All are complete"
