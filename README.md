@@ -17,9 +17,8 @@ This repository contains  the ```R``` script used for the preparation of the inp
 * ten  connectivity options 
 * two current Egtprian Protected Areas-integration options (without, with Protected Areas masking).
 
-
 #### **The R code can be accessible via this <a href="https://github.com/elgabbas/Conservation-Prioritisation-Sensitivity/blob/master/Zonation_Input_files_preparation.Rmd" target="_blank"> link</a>.**
 
-#### **To view the full-documented HTML document,   <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/elgabbas/Conservation-Prioritisation-Sensitivity/master/Zonation_Input_files_preparation.html" target="_blank"> click here</a>.**
+#### **To view the full-documented HTML document, <a href="https://elgabbas.netlify.com/zonation_input_files_preparation#analyses-without-pas-masking" target="_blank"> click here</a>.**
 
 ***Last update:** 04 December 2019*
