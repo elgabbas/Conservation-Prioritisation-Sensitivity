@@ -1,6 +1,6 @@
 ---
-title: '**Spatial conservation prioritisation in data-poor countries: a quantitative sensitivity analysis**<h5 style="font-size:100%; font-color:red; font-family: Helvetica">Appendix 2</h5><br>'
-pagetitle: "Spatial conservation prioritisation in data-poor countries: a quantitative sensitivity analysis"
+title: '**Spatial conservation prioritisation in data-poor countries: a quantitative sensitivity analysis using multiple taxa**<h5 style="font-size:100%; font-color:red; font-family: Helvetica">Appendix 2</h5><br>'
+pagetitle: "Spatial conservation prioritisation in data-poor countries: a quantitative sensitivity analysis using multiple taxa"
 author:
   - name: Ahmed El-Gabbas
     affiliation: The University of Freiburg, Germany<br><a href="https://elgabbas.netlify.com" target="_blank">https://elgabbas.netlify.com/</a>
@@ -63,7 +63,7 @@ options(stringsAsFactors = FALSE)
 
 * This code aimed at automatizing the creation of input files to run the sensitivity analyses of <a href="https://www.helsinki.fi/en/researchgroups/digital-geography-lab/software-developed-in-cbig" target="_blank">`Zonation`</a>, similar to those used in El-Gabbas *et al.* paper:
 
-  > El-Gabbas, Ahmed; Gilbert, Francis; and Dormann, Carsten F. **Spatial conservation prioritisation in data-poor countries: a quantitative sensitivity analysis**. BMC Ecology (under review).
+  > El-Gabbas, Ahmed; Gilbert, Francis; and Dormann, Carsten F. **Spatial conservation prioritisation in data-poor countries: a quantitative sensitivity analysis using multiple taxa**. BMC Ecology (under review).
 
 * It is important to note that this appendix does not give an introduction to `Zonation` software. An introduction to the `Zonation` software can be found in [@di2014quick]. I expect the reader to be familiar with `Zonation` and have read the paper in advance.<br>
 * This file was created via an `RMarkdown` file. The `RMarkdown` and sample data are available <a href="https://github.com/elgabbas/Conservation-Prioritisation-Sensitivity" target="_blank">here</a>.
