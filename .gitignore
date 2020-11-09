@@ -11,4 +11,6 @@ output_spp/*.spp
 output_tasks/*
 Zonation_Input_files_preparation_cache/*
 Zonation_Input_files_preparation_files/*
+Zonation_Input_files_preparation_2_cache/*
+Zonation_Input_files_preparation_2_files/*
 >>>>>>> Initial commit
