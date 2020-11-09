@@ -19,10 +19,8 @@
 
 <br>
 
-## **The R code can be accessible via this <a href="https://github.com/elgabbas/Conservation-Prioritisation-Sensitivity/blob/master/Zonation_Input_files_preparation.Rmd" target="_blank"> link</a>.**
-
 ## **To view the full-documented HTML document, <a href="https://elgabbas.netlify.com/zonation_input_files_preparation.html" target="_blank"> click here</a>.**
 
 ## **To view a shiny web application for the prioritization results, <a href="https://egyptianfauna.shinyapps.io/SCP_Egypt/" target="_blank"> click here</a>.**
 
-***Last update:** 20 July 2020*
+***Last update:** 09 November 2020*
